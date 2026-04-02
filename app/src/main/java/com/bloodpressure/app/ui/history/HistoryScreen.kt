@@ -119,7 +119,8 @@ fun TimeRangeSelector(
 
 @Composable
 fun HistoryRecordCard(record: BloodPressureRecord) {
-    val periodText = if (record.period == Period.MORNING) "🌅 早上" else "🌙 晚上"
+    val periodText = if (record.period == Period.MORNING) "早上" else "晚上"
+    val timeText = record.formattedTime()
     val dateFormatter = DateTimeFormatter.ofPattern("MM月dd日")
 
     Card(
@@ -144,7 +145,7 @@ fun HistoryRecordCard(record: BloodPressureRecord) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = periodText,
+                    text = "$periodText $timeText",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
