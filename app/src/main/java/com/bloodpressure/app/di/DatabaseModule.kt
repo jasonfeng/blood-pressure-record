@@ -6,6 +6,7 @@ import com.bloodpressure.app.data.local.BloodPressureDatabase
 import com.bloodpressure.app.data.local.dao.BloodPressureDao
 import com.bloodpressure.app.data.preferences.SettingsRepository
 import com.bloodpressure.app.data.remote.FeishuService
+import com.bloodpressure.app.data.repository.BloodPressureRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,6 +34,14 @@ object DatabaseModule {
     @Singleton
     fun provideBloodPressureDao(database: BloodPressureDatabase): BloodPressureDao {
         return database.bloodPressureDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBloodPressureRepository(
+        dao: BloodPressureDao
+    ): BloodPressureRepository {
+        return BloodPressureRepository(dao)
     }
 
     @Provides
