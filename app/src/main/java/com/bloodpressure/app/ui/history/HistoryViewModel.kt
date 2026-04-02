@@ -45,11 +45,11 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun loadRecords(timeRange: TimeRange) {
-        val endDate = LocalDate.now()
-        val startDate = when (timeRange) {
-            TimeRange.TODAY -> endDate
-            TimeRange.YESTERDAY -> endDate.minusDays(1)
-            else -> endDate.minusDays(timeRange.days.toLong())
+        val today = LocalDate.now()
+        val (startDate, endDate) = when (timeRange) {
+            TimeRange.TODAY -> today to today
+            TimeRange.YESTERDAY -> today.minusDays(1) to today.minusDays(1)
+            else -> today.minusDays(timeRange.days.toLong()) to today
         }
 
         getRecordsUseCase.getRecordsByDateRange(startDate, endDate)
