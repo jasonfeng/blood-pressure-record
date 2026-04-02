@@ -2,6 +2,8 @@ package com.bloodpressure.app.domain.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 enum class Period {
     MORNING,
@@ -26,7 +28,17 @@ data class BloodPressureRecord(
     val syncTime: LocalDateTime? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
-)
+) {
+    fun formattedDate(): String {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        return date.format(formatter)
+    }
+    
+    fun formattedTime(): String {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        return createdAt.format(formatter)
+    }
+}
 
 fun determinePeriod(hour: Int): Period {
     return when (hour) {

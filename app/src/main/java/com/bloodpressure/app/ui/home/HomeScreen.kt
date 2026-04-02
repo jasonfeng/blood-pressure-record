@@ -380,7 +380,7 @@ fun RecordItem(
                 )
                 Text(
                     text = if (record != null) 
-                        record.date.format(DateTimeFormatter.ofPattern("HH:mm"))
+                        record.formattedTime()
                     else 
                         timeRange,
                     style = MaterialTheme.typography.bodySmall,
