@@ -24,7 +24,9 @@ class SettingsRepository @Inject constructor(
         val SYNC_ENABLED = booleanPreferencesKey("sync_enabled")
         
         // 提醒设置
+        val MORNING_REMINDER_ENABLED = booleanPreferencesKey("morning_reminder_enabled")
         val MORNING_REMINDER_TIME = stringPreferencesKey("morning_reminder_time")
+        val EVENING_REMINDER_ENABLED = booleanPreferencesKey("evening_reminder_enabled")
         val EVENING_REMINDER_TIME = stringPreferencesKey("evening_reminder_time")
         
         // 显示设置
@@ -56,10 +58,15 @@ class SettingsRepository @Inject constructor(
     }
 
     // 提醒设置
+    val morningReminderEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.MORNING_REMINDER_ENABLED] ?: false
+    }
     val morningReminderTime: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.MORNING_REMINDER_TIME] ?: "09:00"
     }
-
+    val eveningReminderEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.EVENING_REMINDER_ENABLED] ?: false
+    }
     val eveningReminderTime: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.EVENING_REMINDER_TIME] ?: "21:00"
     }
@@ -97,10 +104,22 @@ class SettingsRepository @Inject constructor(
             preferences[PreferencesKeys.MORNING_REMINDER_TIME] = time
         }
     }
+    
+    suspend fun setMorningReminderEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.MORNING_REMINDER_ENABLED] = enabled
+        }
+    }
 
     suspend fun setEveningReminderTime(time: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.EVENING_REMINDER_TIME] = time
+        }
+    }
+    
+    suspend fun setEveningReminderEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.EVENING_REMINDER_ENABLED] = enabled
         }
     }
 

@@ -188,12 +188,24 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "早上提醒",
                     subtitle = uiState.morningReminderTime,
-                    onClick = { viewModel.showTimePicker("morning") }
+                    onClick = { viewModel.showTimePicker("morning") },
+                    trailing = {
+                        Switch(
+                            checked = uiState.morningReminderEnabled,
+                            onCheckedChange = viewModel::toggleMorningReminder
+                        )
+                    }
                 )
                 SettingsItem(
                     title = "晚上提醒",
                     subtitle = uiState.eveningReminderTime,
-                    onClick = { viewModel.showTimePicker("evening") }
+                    onClick = { viewModel.showTimePicker("evening") },
+                    trailing = {
+                        Switch(
+                            checked = uiState.eveningReminderEnabled,
+                            onCheckedChange = viewModel::toggleEveningReminder
+                        )
+                    }
                 )
             }
 

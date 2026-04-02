@@ -2,12 +2,14 @@ package com.bloodpressure.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bloodpressure.app.data.alarm.AlarmScheduler
 import com.bloodpressure.app.data.preferences.SettingsRepository
 import com.bloodpressure.app.data.remote.FeishuResult
 import com.bloodpressure.app.data.remote.FeishuService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 import javax.inject.Inject
 
 data class SettingsUiState(
@@ -16,7 +18,9 @@ data class SettingsUiState(
     val feishuAppId: String = "",
     val feishuAppSecret: String = "",
     val feishuTableToken: String = "",
+    val morningReminderEnabled: Boolean = false,
     val morningReminderTime: String = "09:00",
+    val eveningReminderEnabled: Boolean = false,
     val eveningReminderTime: String = "21:00",
     val darkMode: String = "跟随系统",
     val isLoading: Boolean = false,
@@ -29,7 +33,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val feishuService: FeishuService
+    private val feishuService: FeishuService,
+    private val alarmScheduler: AlarmScheduler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -62,8 +67,18 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            settingsRepository.morningReminderEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(morningReminderEnabled = enabled)
+            }
+        }
+        viewModelScope.launch {
             settingsRepository.morningReminderTime.collect { time ->
                 _uiState.value = _uiState.value.copy(morningReminderTime = time)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.eveningReminderEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(eveningReminderEnabled = enabled)
             }
         }
         viewModelScope.launch {
@@ -166,6 +181,46 @@ class SettingsViewModel @Inject constructor(
                 showTimePickerDialog = false,
                 editingReminderType = ""
             )
+        }
+    }
+
+    fun toggleMorningReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setMorningReminderEnabled(enabled)
+            if (enabled) {
+                val time = _uiState.value.morningReminderTime
+                val parts = time.split(":")
+                val hour = parts[0].toInt()
+                val minute = parts[1].toInt()
+                alarmScheduler.scheduleExactAlarm(
+                    hour, minute,
+                    AlarmScheduler.REQUEST_CODE_MORNING,
+                    "测量血压提醒",
+                    "早上好，该测量血压了"
+                )
+            } else {
+                alarmScheduler.cancelAlarm(AlarmScheduler.REQUEST_CODE_MORNING)
+            }
+        }
+    }
+
+    fun toggleEveningReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setEveningReminderEnabled(enabled)
+            if (enabled) {
+                val time = _uiState.value.eveningReminderTime
+                val parts = time.split(":")
+                val hour = parts[0].toInt()
+                val minute = parts[1].toInt()
+                alarmScheduler.scheduleExactAlarm(
+                    hour, minute,
+                    AlarmScheduler.REQUEST_CODE_EVENING,
+                    "测量血压提醒",
+                    "晚上好，该测量血压了"
+                )
+            } else {
+                alarmScheduler.cancelAlarm(AlarmScheduler.REQUEST_CODE_EVENING)
+            }
         }
     }
 }
