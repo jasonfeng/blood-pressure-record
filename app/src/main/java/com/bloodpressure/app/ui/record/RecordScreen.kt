@@ -176,6 +176,7 @@ fun RecordScreen(
     }
 }
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun BloodPressureDisplay(
     systolic: String,

@@ -71,7 +71,6 @@ fun HomeScreen(
         floatingActionButton = {
             val currentHour = java.time.LocalTime.now().hour
             val currentPeriod = if (currentHour in 4..11) Period.MORNING else Period.EVENING
-            val periodName = if (currentPeriod == Period.MORNING) "早上" else "晚上"
             FloatingActionButton(
                 onClick = {
                     onNavigateToRecord(

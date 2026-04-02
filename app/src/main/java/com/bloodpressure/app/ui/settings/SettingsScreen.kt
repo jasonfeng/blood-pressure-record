@@ -33,6 +33,7 @@ fun SettingsScreen(
     onExportData: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    @Suppress("UNUSED_VARIABLE")
     val context = LocalContext.current
     var appIdInput by remember { mutableStateOf("") }
     var appSecretInput by remember { mutableStateOf("") }
