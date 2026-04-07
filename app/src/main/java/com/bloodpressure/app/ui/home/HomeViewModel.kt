@@ -56,6 +56,12 @@ class HomeViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun refresh() {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+        loadTodayRecords()
+        loadWeekRecords()
+    }
+
     fun getMorningRecord(): BloodPressureRecord? {
         return _uiState.value.todayRecords.firstOrNull { it.period == Period.MORNING }
     }

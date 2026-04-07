@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bloodpressure.app.domain.model.BloodPressureRecord
+import com.bloodpressure.app.domain.model.BpLevel
 import com.bloodpressure.app.domain.model.Period
 import java.time.format.DateTimeFormatter
 
@@ -27,7 +28,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToRecord: (String, String) -> Unit,
+    onNavigateToRecord: (String, String?) -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
@@ -51,14 +52,27 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToHistory) {
+                    IconButton(
+                        onClick = { viewModel.refresh() }
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "刷新",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(
+                        onClick = onNavigateToHistory
+                    ) {
                         Icon(
                             Icons.Default.DateRange,
                             contentDescription = "历史记录",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    IconButton(onClick = onNavigateToSettings) {
+                    IconButton(
+                        onClick = onNavigateToSettings
+                    ) {
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = "设置",
@@ -69,13 +83,11 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            val currentHour = java.time.LocalTime.now().hour
-            val currentPeriod = if (currentHour in 4..11) Period.MORNING else Period.EVENING
             FloatingActionButton(
                 onClick = {
                     onNavigateToRecord(
                         java.time.LocalDate.now().toString(),
-                        currentPeriod.name
+                        null
                     )
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -85,35 +97,45 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(12.dp))
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                BloodPressureTrendCard(records = uiState.weekRecords, modifier = Modifier.weight(1f))
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                TodayRecordsCard(
+                    morningRecord = viewModel.getMorningRecord(),
+                    eveningRecord = viewModel.getEveningRecord(),
+                    onRecordClick = { period ->
+                        onNavigateToRecord(
+                            java.time.LocalDate.now().toString(),
+                            period.name
+                        )
+                    },
+                    modifier = Modifier.weight(1.2f)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                QuickTipsCard(modifier = Modifier.weight(0.6f))
+
+                Spacer(modifier = Modifier.height(80.dp))
+            }
             
-            BloodPressureTrendCard(records = uiState.weekRecords, modifier = Modifier.weight(1f))
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TodayRecordsCard(
-                morningRecord = viewModel.getMorningRecord(),
-                eveningRecord = viewModel.getEveningRecord(),
-                onRecordClick = { period ->
-                    onNavigateToRecord(
-                        java.time.LocalDate.now().toString(),
-                        period.name
-                    )
-                },
-                modifier = Modifier.weight(1.2f)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            QuickTipsCard(modifier = Modifier.weight(0.6f))
-
-            Spacer(modifier = Modifier.height(80.dp))
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp)
+                )
+            }
         }
     }
 }
@@ -389,17 +411,50 @@ fun RecordItem(
             }
             if (record != null) {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "${record.systolic}/${record.diastolic}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${record.systolic}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "/",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${record.diastolic}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
                     record.heartRate?.let {
                         Text(
                             text = "❤️ $it",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    val level = record.bpLevel()
+                    val levelColor = when (level) {
+                        BpLevel.NORMAL -> Color(0xFF4CAF50)
+                        BpLevel.ELEVATED -> Color(0xFFFFC107)
+                        BpLevel.STAGE1 -> Color(0xFFFF9800)
+                        BpLevel.STAGE2 -> Color(0xFFF44336)
+                        BpLevel.CRISIS -> Color(0xFFD32F2F)
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = levelColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = level.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = levelColor,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
                 }

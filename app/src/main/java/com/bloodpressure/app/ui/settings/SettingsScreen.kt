@@ -1,8 +1,11 @@
 package com.bloodpressure.app.ui.settings
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -35,6 +38,23 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     @Suppress("UNUSED_VARIABLE")
     val context = LocalContext.current
+    LaunchedEffect(context) {
+        viewModel.setActivity(context as Activity)
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[android.Manifest.permission.POST_NOTIFICATIONS] == true
+        viewModel.onPermissionResult(granted)
+    }
+
+    LaunchedEffect(uiState.needsNotificationPermission) {
+        if (uiState.needsNotificationPermission) {
+            permissionLauncher.launch(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS))
+        }
+    }
+
     var appIdInput by remember { mutableStateOf("") }
     var appSecretInput by remember { mutableStateOf("") }
     var tableTokenInput by remember { mutableStateOf("") }
@@ -240,7 +260,7 @@ fun SettingsScreen(
             SettingsSection(title = "关于") {
                 SettingsItem(
                     title = "版本",
-                    subtitle = "1.0.1",
+                    subtitle = "1.0.5",
                     onClick = { }
                 )
             }

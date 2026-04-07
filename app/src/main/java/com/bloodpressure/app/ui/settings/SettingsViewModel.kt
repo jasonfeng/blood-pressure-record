@@ -1,5 +1,10 @@
 package com.bloodpressure.app.ui.settings
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bloodpressure.app.data.alarm.AlarmScheduler
@@ -27,7 +32,9 @@ data class SettingsUiState(
     val showFeishuDialog: Boolean = false,
     val showTimePickerDialog: Boolean = false,
     val editingReminderType: String = "",
-    val connectionStatus: String = ""
+    val connectionStatus: String = "",
+    val needsNotificationPermission: Boolean = false,
+    val pendingReminderToggle: String = ""
 )
 
 @HiltViewModel
@@ -37,8 +44,40 @@ class SettingsViewModel @Inject constructor(
     private val alarmScheduler: AlarmScheduler
 ) : ViewModel() {
 
+    private var activity: Activity? = null
+
+    fun setActivity(activity: Activity) {
+        this.activity = activity
+    }
+
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    fun onPermissionResult(granted: Boolean) {
+        if (granted) {
+            val pending = _uiState.value.pendingReminderToggle
+            when (pending) {
+                "morning" -> toggleMorningReminderInternal(true)
+                "evening" -> toggleEveningReminderInternal(true)
+            }
+        }
+        _uiState.value = _uiState.value.copy(
+            pendingReminderToggle = "",
+            needsNotificationPermission = false
+        )
+    }
+
+    fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity?.let {
+                ActivityCompat.requestPermissions(
+                    it,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -64,6 +103,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.feishuTableToken.collect { token ->
                 _uiState.value = _uiState.value.copy(feishuTableToken = token)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.morningReminderEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(morningReminderEnabled = enabled)
             }
         }
         viewModelScope.launch {
@@ -185,6 +229,17 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun toggleMorningReminder(enabled: Boolean) {
+        if (enabled && !checkNotificationPermission()) {
+            _uiState.value = _uiState.value.copy(
+                pendingReminderToggle = "morning",
+                needsNotificationPermission = true
+            )
+            return
+        }
+        toggleMorningReminderInternal(enabled)
+    }
+
+    private fun toggleMorningReminderInternal(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setMorningReminderEnabled(enabled)
             if (enabled) {
@@ -205,6 +260,17 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun toggleEveningReminder(enabled: Boolean) {
+        if (enabled && !checkNotificationPermission()) {
+            _uiState.value = _uiState.value.copy(
+                pendingReminderToggle = "evening",
+                needsNotificationPermission = true
+            )
+            return
+        }
+        toggleEveningReminderInternal(enabled)
+    }
+
+    private fun toggleEveningReminderInternal(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setEveningReminderEnabled(enabled)
             if (enabled) {
@@ -221,6 +287,19 @@ class SettingsViewModel @Inject constructor(
             } else {
                 alarmScheduler.cancelAlarm(AlarmScheduler.REQUEST_CODE_EVENING)
             }
+        }
+    }
+
+    private fun checkNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity?.let {
+                ActivityCompat.checkSelfPermission(
+                    it,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } ?: false
+        } else {
+            true
         }
     }
 }

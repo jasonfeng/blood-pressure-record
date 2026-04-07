@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bloodpressure.app.domain.model.classifyBloodPressure
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +83,54 @@ fun RecordScreen(
                 onSystolicChange = viewModel::updateSystolic,
                 onDiastolicChange = viewModel::updateDiastolic
             )
+
+            // Blood Pressure Level Display
+            val systolicInt = uiState.systolic.toIntOrNull()
+            val diastolicInt = uiState.diastolic.toIntOrNull()
+            if (systolicInt != null && diastolicInt != null && systolicInt > 0 && diastolicInt > 0) {
+                val level = classifyBloodPressure(systolicInt, diastolicInt)
+                val levelColor = when (level) {
+                    com.bloodpressure.app.domain.model.BpLevel.NORMAL -> Color(0xFF4CAF50)
+                    com.bloodpressure.app.domain.model.BpLevel.ELEVATED -> Color(0xFFFFC107)
+                    com.bloodpressure.app.domain.model.BpLevel.STAGE1 -> Color(0xFFFF9800)
+                    com.bloodpressure.app.domain.model.BpLevel.STAGE2 -> Color(0xFFF44336)
+                    com.bloodpressure.app.domain.model.BpLevel.CRISIS -> Color(0xFFD32F2F)
+                }
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = levelColor.copy(alpha = 0.15f)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = null,
+                            tint = levelColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = level.label,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = levelColor
+                            )
+                            Text(
+                                text = level.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 

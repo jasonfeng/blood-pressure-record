@@ -51,10 +51,15 @@ class RecordViewModel @Inject constructor(
         } catch (e: Exception) {
             LocalDate.now()
         }
-        val period = try {
-            Period.valueOf(periodStr)
-        } catch (e: Exception) {
+        
+        val period = if (periodStr == "auto" || periodStr.isEmpty()) {
             determinePeriod(LocalTime.now().hour)
+        } else {
+            try {
+                Period.valueOf(periodStr)
+            } catch (e: Exception) {
+                determinePeriod(LocalTime.now().hour)
+            }
         }
 
         _uiState.value = _uiState.value.copy(date = date, period = period)

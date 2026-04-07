@@ -574,6 +574,212 @@ class GetRecordsUseCaseTest {
 | Repository | ≥70% |
 | ViewModel | ≥60% |
 
+### 10.3 自动化UI测试（Espresso）
+
+本项目采用 **Espresso** 作为行业标准的自动化UI测试框架。
+
+#### 10.3.1 为什么选择Espresso？
+
+| 方案 | 优点 | 缺点 |
+|------|------|------|
+| **Espresso** | 专为Android设计，无需特殊权限，API友好，社区成熟 | 仅支持Android |
+| UI Automator | 跨应用测试，权限灵活 | 速度较慢，API较复杂 |
+| Appium | 跨平台（iOS/Android/Web） | 需额外服务器，配置复杂 |
+| adb shell input tap | 无需App修改 | 需要INJECT_EVENTS权限（root），不可靠 |
+
+**结论**：Espresso 是本项目App内测试的最佳选择。
+
+#### 10.3.2 依赖配置
+
+```kotlin
+// app/build.gradle.kts
+android {
+    defaultConfig {
+        // ...
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+}
+
+dependencies {
+    // Espresso Core
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    
+    // JUnit4 Runner
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    
+    // Compose Testing
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    
+    // Activity Scenario
+    androidTestImplementation("androidx.test:activity:1.8.2")
+}
+```
+
+#### 10.3.3 测试文件结构
+
+```
+app/src/androidTest/java/com/bloodpressure/app/
+└── ui/
+    └── MainActivityTest.kt
+```
+
+#### 10.3.4 测试示例
+
+```kotlin
+package com.bloodpressure.app.ui
+
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class MainActivityTest {
+
+    @Rule
+    @JvmField
+    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+
+    @Test
+    fun appLaunches() {
+        // 验证应用启动成功
+        onView(withId(R.id.main_container))
+            .check(matches(isDisplayed()))
+    }
+}
+```
+
+#### 10.3.5 常用Espresso API
+
+##### 查找视图
+```kotlin
+// 按ID查找
+onView(withId(R.id.btn_save))
+
+// 按文本查找
+onView(withText("保存"))
+
+// 按内容描述查找
+onView(withContentDescription("返回"))
+
+ // 按ID+文本组合
+onView(allOf(withId(R.id.btn_save), withText("保存")))
+```
+
+##### 视图断言
+```kotlin
+// 验证可见性
+.check(matches(isDisplayed()))
+.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+// 验证文本内容
+.check(matches(withText("正常")))
+.check(matches(withHint("请输入收缩压")))
+
+// 验证存在性
+.check(matches(isDisplayed()))
+```
+
+##### 用户交互
+```kotlin
+// 点击操作
+onView(withId(R.id.btn_save)).perform(click())
+
+// 长按操作
+onView(withId(R.id.record_item)).perform(longClick())
+
+// 输入文本
+onView(withId(R.id.input_systolic)).perform(typeText("120"))
+
+// 清除文本
+onView(withId(R.id.input_systolic)).perform(clearText())
+
+// 滑动操作
+onView(withId(R.id.scroll_view)).perform(swipeUp())
+```
+
+##### Compose测试
+```kotlin
+// Compose Matcher
+onNodeWithText("保存").assertIsDisplayed()
+
+// 点击Compose元素
+onNodeWithText("保存").performClick()
+
+// 滚动到Compose元素
+onNodeWithText("历史记录").performScrollTo().assertIsDisplayed()
+```
+
+#### 10.3.6 运行测试
+
+```bash
+# 运行所有Instrumented测试
+./gradlew connectedAndroidTest
+
+# 运行特定测试类
+./gradlew connectedAndroidTest --tests="com.bloodpressure.app.ui.MainActivityTest"
+
+# 运行特定测试方法
+./gradlew connectedAndroidTest --tests="com.bloodpressure.app.ui.MainActivityTest.appLaunches"
+```
+
+#### 10.3.7 测试最佳实践
+
+1. **每个测试独立**：测试之间不应有依赖关系
+2. **命名规范**：测试方法名应描述测试场景
+3. **AAA模式**：Arrange（准备）→ Act（执行）→ Assert（断言）
+4. **幂等性**：测试可以重复运行，结果一致
+5. **只测UI行为**：不测试业务逻辑（业务逻辑用单元测试）
+
+#### 10.3.8 待扩展测试用例
+
+```kotlin
+@Test
+fun testSaveBloodPressureRecord() {
+    // 1. 点击添加按钮
+    onView(withId(R.id.btn_add)).perform(click())
+    
+    // 2. 输入血压数据
+    onView(withId(R.id.input_systolic)).perform(typeText("120"))
+    onView(withId(R.id.input_diastolic)).perform(typeText("80"))
+    
+    // 3. 点击保存
+    onView(withId(R.id.btn_save)).perform(click())
+    
+    // 4. 验证保存成功
+    onView(withText("保存成功")).check(matches(isDisplayed()))
+}
+
+@Test
+fun testDeleteRecord() {
+    // 1. 长按记录
+    onView(withId(R.id.record_item)).perform(longClick())
+    
+    // 2. 确认删除
+    onView(withText("确认")).perform(click())
+    
+    // 3. 验证删除成功
+    onView(withText("删除成功")).check(matches(isDisplayed()))
+}
+
+@Test
+fun testHistoryFilter() {
+    // 1. 点击筛选按钮
+    onView(withId(R.id.btn_filter)).perform(click())
+    
+    // 2. 选择"昨天"
+    onView(withText("昨天")).perform(click())
+    
+    // 3. 验证筛选结果
+    onView(withId(R.id.history_list)).check(matches(isDisplayed()))
+}
+```
+
 ---
 
 ## 十一、安全规范

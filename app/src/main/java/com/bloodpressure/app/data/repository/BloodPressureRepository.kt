@@ -41,7 +41,13 @@ class BloodPressureRepository @Inject constructor(
     }
 
     suspend fun saveRecord(record: BloodPressureRecord): Long {
-        return bloodPressureDao.insertRecord(BloodPressureRecordEntity.fromDomain(record))
+        val existing = bloodPressureDao.getRecordByDateAndPeriod(record.date.toString(), record.period.name)
+        return if (existing != null) {
+            bloodPressureDao.updateRecord(BloodPressureRecordEntity.fromDomain(record.copy(id = existing.id)))
+            existing.id
+        } else {
+            bloodPressureDao.insertRecord(BloodPressureRecordEntity.fromDomain(record))
+        }
     }
 
     suspend fun updateRecord(record: BloodPressureRecord) {

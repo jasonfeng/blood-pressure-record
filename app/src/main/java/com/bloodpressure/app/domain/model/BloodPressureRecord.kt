@@ -16,6 +16,24 @@ enum class SyncStatus {
     FAILED
 }
 
+enum class BpLevel(val label: String, val color: String, val description: String) {
+    NORMAL("正常", "#4CAF50", "血压在正常范围内，请继续保持"),
+    ELEVATED("偏高", "#FFC107", "血压偏高，建议改善生活方式"),
+    STAGE1("1期高血压", "#FF9800", "血压偏高，请咨询医生"),
+    STAGE2("2期高血压", "#F44336", "血压较高，需要医疗干预"),
+    CRISIS("危机", "#D32F2F", "立即就医！血压极度升高")
+}
+
+fun classifyBloodPressure(systolic: Int, diastolic: Int): BpLevel {
+    return when {
+        systolic > 180 || diastolic > 120 -> BpLevel.CRISIS
+        systolic >= 140 || diastolic >= 90 -> BpLevel.STAGE2
+        systolic >= 130 || diastolic >= 80 -> BpLevel.STAGE1
+        systolic >= 120 && systolic < 130 && diastolic < 80 -> BpLevel.ELEVATED
+        else -> BpLevel.NORMAL
+    }
+}
+
 data class BloodPressureRecord(
     val id: Long = 0,
     val date: LocalDate,
@@ -38,6 +56,8 @@ data class BloodPressureRecord(
         val formatter = DateTimeFormatter.ofPattern("HH:mm")
         return createdAt.format(formatter)
     }
+
+    fun bpLevel(): BpLevel = classifyBloodPressure(systolic, diastolic)
 }
 
 fun determinePeriod(hour: Int): Period {

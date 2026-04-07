@@ -13,7 +13,7 @@ import com.bloodpressure.app.ui.settings.SettingsScreen
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Record : Screen("record/{date}/{period}") {
-        fun createRoute(date: String, period: String) = "record/$date/$period"
+        fun createRoute(date: String, period: String?) = "record/$date/${period ?: "auto"}"
     }
     object History : Screen("history")
     object Settings : Screen("settings")

@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:name=".BloodPressureApp"
@@ -31,7 +33,8 @@
 
         <receiver
             android:name=".data.alarm.AlarmReceiver"
-            android:exported="false">
+            android:exported="false"
+            android:directBootAware="false">
             <intent-filter>
                 <action android:name="com.bloodpressure.app.ALARM" />
             </intent-filter>
@@ -39,7 +42,8 @@
 
         <receiver
             android:name=".data.alarm.BootReceiver"
-            android:exported="false">
+            android:exported="false"
+            android:directBootAware="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

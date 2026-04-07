@@ -2,9 +2,11 @@ package com.bloodpressure.app.data.alarm
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.AlarmManager.AlarmClockInfo
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +19,7 @@ class AlarmScheduler @Inject constructor(
     companion object {
         const val REQUEST_CODE_MORNING = 1001
         const val REQUEST_CODE_EVENING = 1002
+        private const val TAG = "AlarmScheduler"
     }
 
     fun scheduleAlarms() {
@@ -55,20 +58,25 @@ class AlarmScheduler @Inject constructor(
             }
         }
 
+        Log.d(TAG, "Scheduling alarm for: ${calendar.time}")
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (alarmManager.canScheduleExactAlarms()) {
+                val alarmClockInfo = AlarmClockInfo(calendar.timeInMillis, pendingIntent)
+                alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+                Log.d(TAG, "Using setAlarmClock")
+            } else {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     calendar.timeInMillis,
                     pendingIntent
                 )
+                Log.d(TAG, "Using setExactAndAllowWhileIdle (fallback)")
             }
         } else {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            val alarmClockInfo = AlarmClockInfo(calendar.timeInMillis, pendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+            Log.d(TAG, "Using setAlarmClock (pre-S)")
         }
     }
 
