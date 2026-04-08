@@ -11,12 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import com.bloodpressure.app.data.export.ExportService
 import com.bloodpressure.app.ui.navigation.BloodPressureNavHost
 import com.bloodpressure.app.ui.theme.BloodPressureTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,7 +29,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let {
-            CoroutineScope(Dispatchers.Main).launch {
+            lifecycleScope.launch {
                 val count = exportService.importFromCsv(uri)
                 Toast.makeText(this@MainActivity, "导入 $count 条记录", Toast.LENGTH_SHORT).show()
             }
@@ -55,7 +54,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleExport() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             val uri = exportService.exportToCsv()
             if (uri != null) {
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {

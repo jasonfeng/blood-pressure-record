@@ -79,3 +79,12 @@ Thumbs.db
 
 # Secrets
 secrets.properties
+
+# Test artifacts (screenshots, dumps, etc.)
+*.png
+dump.xml
+*.xml
+SELECT*
+emulator_screen*.png
+screenshot*.png
+screen*.png

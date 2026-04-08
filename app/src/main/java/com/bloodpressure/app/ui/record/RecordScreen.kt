@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bloodpressure.app.domain.model.classifyBloodPressure
+import com.bloodpressure.app.domain.model.toComposeColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,13 +90,7 @@ fun RecordScreen(
             val diastolicInt = uiState.diastolic.toIntOrNull()
             if (systolicInt != null && diastolicInt != null && systolicInt > 0 && diastolicInt > 0) {
                 val level = classifyBloodPressure(systolicInt, diastolicInt)
-                val levelColor = when (level) {
-                    com.bloodpressure.app.domain.model.BpLevel.NORMAL -> Color(0xFF4CAF50)
-                    com.bloodpressure.app.domain.model.BpLevel.ELEVATED -> Color(0xFFFFC107)
-                    com.bloodpressure.app.domain.model.BpLevel.STAGE1 -> Color(0xFFFF9800)
-                    com.bloodpressure.app.domain.model.BpLevel.STAGE2 -> Color(0xFFF44336)
-                    com.bloodpressure.app.domain.model.BpLevel.CRISIS -> Color(0xFFD32F2F)
-                }
+                val levelColor = level.toComposeColor()
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = levelColor.copy(alpha = 0.15f)

@@ -21,6 +21,8 @@ data class HomeUiState(
     val isLoading: Boolean = true
 )
 
+private const val WEEK_RANGE_DAYS = 6
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getTodayRecordsUseCase: GetTodayRecordsUseCase,
@@ -48,7 +50,7 @@ class HomeViewModel @Inject constructor(
 
     private fun loadWeekRecords() {
         val endDate = LocalDate.now()
-        val startDate = endDate.minusDays(6)
+        val startDate = endDate.minusDays(WEEK_RANGE_DAYS.toLong())
         getRecordsUseCase.getRecordsByDateRange(startDate, endDate)
             .onEach { records ->
                 _uiState.value = _uiState.value.copy(weekRecords = records)

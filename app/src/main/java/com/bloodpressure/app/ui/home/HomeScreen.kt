@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bloodpressure.app.domain.model.BloodPressureRecord
 import com.bloodpressure.app.domain.model.BpLevel
 import com.bloodpressure.app.domain.model.Period
+import com.bloodpressure.app.domain.model.toComposeColor
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -432,19 +433,13 @@ fun RecordItem(
                     }
                     record.heartRate?.let {
                         Text(
-                            text = "❤️ $it",
+                            text = "💓 $it",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     val level = record.bpLevel()
-                    val levelColor = when (level) {
-                        BpLevel.NORMAL -> Color(0xFF4CAF50)
-                        BpLevel.ELEVATED -> Color(0xFFFFC107)
-                        BpLevel.STAGE1 -> Color(0xFFFF9800)
-                        BpLevel.STAGE2 -> Color(0xFFF44336)
-                        BpLevel.CRISIS -> Color(0xFFD32F2F)
-                    }
+                    val levelColor = level.toComposeColor()
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = levelColor.copy(alpha = 0.15f)

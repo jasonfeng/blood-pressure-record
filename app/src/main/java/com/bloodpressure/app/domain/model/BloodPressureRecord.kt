@@ -16,12 +16,16 @@ enum class SyncStatus {
     FAILED
 }
 
-enum class BpLevel(val label: String, val color: String, val description: String) {
+enum class BpLevel(val label: String, val colorHex: String, val description: String) {
     NORMAL("正常", "#4CAF50", "血压在正常范围内，请继续保持"),
     ELEVATED("偏高", "#FFC107", "血压偏高，建议改善生活方式"),
     STAGE1("1期高血压", "#FF9800", "血压偏高，请咨询医生"),
     STAGE2("2期高血压", "#F44336", "血压较高，需要医疗干预"),
     CRISIS("危机", "#D32F2F", "立即就医！血压极度升高")
+}
+
+fun BpLevel.toComposeColor(): androidx.compose.ui.graphics.Color {
+    return androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(this.colorHex))
 }
 
 fun classifyBloodPressure(systolic: Int, diastolic: Int): BpLevel {

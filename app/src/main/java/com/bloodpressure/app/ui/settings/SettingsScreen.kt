@@ -36,7 +36,6 @@ fun SettingsScreen(
     onExportData: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    @Suppress("UNUSED_VARIABLE")
     val context = LocalContext.current
     LaunchedEffect(context) {
         viewModel.setActivity(context as Activity)
